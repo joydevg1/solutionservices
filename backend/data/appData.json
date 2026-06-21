@@ -1,0 +1,31 @@
+{
+  "users": [],
+  "bookings": [],
+  "chatMessages": [],
+  "offers": [
+    {
+      "id": 1,
+      "title": "Subscriber \u2014 15% off all services",
+      "discountPercent": 15,
+      "serviceId": null,
+      "active": true,
+      "role": "subscriber"
+    },
+    {
+      "id": 2,
+      "title": "AC season special",
+      "discountPercent": 10,
+      "serviceId": 3,
+      "active": true,
+      "role": "subscriber"
+    }
+  ],
+  "customServices": [],
+  "nextIds": {
+    "user": 1,
+    "booking": 1,
+    "chat": 1,
+    "offer": 3,
+    "service": 100
+  }
+}

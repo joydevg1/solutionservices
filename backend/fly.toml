@@ -1,0 +1,29 @@
+# Fly.io config for api.solutionservices.co.in
+# See DEPLOYMENT.md for setup steps.
+
+app = "solution-services-api"
+primary_region = "bom"
+
+[build]
+
+[env]
+  PORT = "8080"
+  FLASK_ENV = "production"
+  DEBUG = "False"
+  DATABASE_PATH = "/data/urban_services.db"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "solution_services_data"
+  destination = "/data"

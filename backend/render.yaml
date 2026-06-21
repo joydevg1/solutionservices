@@ -1,0 +1,27 @@
+# Render Blueprint — api.solutionservices.co.in
+# Dashboard: New > Blueprint > connect repo with this file at backend/render.yaml
+# Note: free tier disk is ephemeral; use Fly.io for persistent SQLite (see DEPLOYMENT.md).
+
+services:
+  - type: web
+    name: solution-services-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_ORIGINS
+        value: https://solutionservices.co.in,https://www.solutionservices.co.in
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_BOOTSTRAP_KEY
+        sync: false
+      - key: ADMIN_EMAILS
+        value: admin@solutionservices.co.in
+      - key: JWT_EXPIRE_HOURS
+        value: "168"
