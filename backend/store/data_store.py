@@ -73,14 +73,16 @@ def _custom_service_row(row):
 def upsert_user(name, email, role):
     normalized = email.strip().lower()
     now = _now()
-    existing = execute_query("SELECT * FROM users WHERE email = ?", (normalized,))
+    existing = execute_query("SELECT * FROM users WHERE email = ?", (normalized,)) or []
     if existing:
         execute_insert_update(
             "UPDATE users SET name = ?, role = ?, updated_at = ? WHERE id = ?",
             (name.strip(), role, now, existing[0]["id"]),
         )
-        row = execute_query("SELECT * FROM users WHERE id = ?", (existing[0]["id"],))[0]
-        return _user_row(row)
+        rows = execute_query("SELECT * FROM users WHERE id = ?", (existing[0]["id"],)) or []
+        if not rows:
+            raise RuntimeError("Failed to load user after update.")
+        return _user_row(rows[0])
 
     user_id = execute_insert_update(
         """
@@ -89,8 +91,12 @@ def upsert_user(name, email, role):
         """,
         (name.strip(), normalized, role, now, now),
     )
-    row = execute_query("SELECT * FROM users WHERE id = ?", (user_id,))[0]
-    return _user_row(row)
+    if not user_id:
+        raise RuntimeError("Failed to create user. Database may not be initialized.")
+    rows = execute_query("SELECT * FROM users WHERE id = ?", (user_id,)) or []
+    if not rows:
+        raise RuntimeError("Failed to load user after create.")
+    return _user_row(rows[0])
 
 
 def get_user_by_id(user_id):
@@ -111,7 +117,7 @@ def update_user_role(user_id, role):
 
 
 def list_users():
-    rows = execute_query("SELECT * FROM users ORDER BY id")
+    rows = execute_query("SELECT * FROM users ORDER BY id") or []
     return [_user_row(r) for r in rows]
 
 

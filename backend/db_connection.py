@@ -7,9 +7,15 @@ DB_PATH = os.getenv(
     os.path.join(os.path.dirname(__file__), "urban_services.db"),
 )
 
+def _ensure_db_dir():
+    db_dir = os.path.dirname(os.path.abspath(DB_PATH))
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+
 def get_db_connection():
     """Create and return a SQLite database connection."""
     try:
+        _ensure_db_dir()
         connection = sqlite3.connect(DB_PATH)
         connection.row_factory = sqlite3.Row  # Return rows as dictionaries
         return connection
@@ -47,7 +53,7 @@ def execute_query(query, params=None):
         return [dict(row) for row in result]
     except Exception as e:
         print(f"Error executing query: {e}")
-        return None
+        return []
     finally:
         connection.close()
 

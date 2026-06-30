@@ -8,7 +8,7 @@ services:
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
+    startCommand: bash start.sh
     healthCheckPath: /api/health
     envVars:
       - key: FLASK_ENV
@@ -16,7 +16,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_ORIGINS
-        value: https://solutionservices.co.in,https://www.solutionservices.co.in
+        value: https://solutionservices.pages.dev,https://solutionservices.co.in,https://www.solutionservices.co.in
       - key: JWT_SECRET
         generateValue: true
       - key: ADMIN_BOOTSTRAP_KEY

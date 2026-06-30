@@ -31,7 +31,8 @@ def session():
     if role not in VALID_ROLES:
         return jsonify({"message": "Invalid role. Use admin, subscriber, or customer."}), 400
 
-    existing = next((u for u in data_store.list_users() if u["email"] == email), None)
+    existing = data_store.list_users() or []
+    existing = next((u for u in existing if u["email"] == email), None)
 
     if role == "admin":
         if not can_assign_admin(email, admin_key):
@@ -39,8 +40,12 @@ def session():
     elif existing and existing.get("role") == "admin":
         return jsonify({"message": "This account is admin-only. Sign in with admin credentials."}), 403
 
-    user = data_store.upsert_user(name, email, role)
-    token = issue_token(user)
+    try:
+        user = data_store.upsert_user(name, email, role)
+        token = issue_token(user)
+    except RuntimeError as exc:
+        return jsonify({"message": str(exc)}), 503
+
     return jsonify({"user": user, "token": token}), 200
 
 
