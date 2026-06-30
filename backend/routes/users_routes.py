@@ -14,6 +14,21 @@ users_bp = Blueprint("users", __name__)
 VALID_ROLES = ["admin", "subscriber", "customer"]
 
 
+@users_bp.route("/me", methods=["GET", "OPTIONS"])
+@require_auth
+def current_user():
+    if request.method == "OPTIONS":
+        return "", 204
+    return jsonify(
+        {
+            "id": g.current_user["id"],
+            "name": g.current_user.get("name", ""),
+            "email": g.current_user["email"],
+            "role": g.current_user["role"],
+        }
+    ), 200
+
+
 @users_bp.route("/session", methods=["POST", "OPTIONS"])
 def session():
     if request.method == "OPTIONS":

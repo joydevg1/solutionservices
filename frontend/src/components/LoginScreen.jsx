@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createSession } from "../api";
+import { createSession, getApiErrorMessage } from "../api";
 
 const ROLES = [
   { id: "customer", title: "Customer", desc: "Standard pricing. Upgrade anytime." },
@@ -36,8 +36,7 @@ export default function LoginScreen({ onLogin }) {
       });
       onLogin(user);
     } catch (err) {
-      const msg = err.response?.data?.message || "Could not sign in. Is the server running?";
-      setError(msg);
+      setError(getApiErrorMessage(err, "Could not sign in. Is the server running?"));
     } finally {
       setLoading(false);
     }

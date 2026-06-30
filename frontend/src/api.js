@@ -1,14 +1,15 @@
 import axios from "axios";
+import { clearStoredSession, getStoredToken, isValidUser } from "./utils/auth";
 
 const STORAGE_TOKEN = "ss_token";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
-  timeout: 30000,
+  timeout: 120000,
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(STORAGE_TOKEN);
+  const token = getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -19,8 +20,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      clearAuthToken();
-      localStorage.removeItem("ss_user");
+      clearStoredSession();
       window.dispatchEvent(new Event("ss:logout"));
     }
     return Promise.reject(error);
@@ -36,10 +36,33 @@ export function clearAuthToken() {
   localStorage.removeItem(STORAGE_TOKEN);
 }
 
+export function getApiErrorMessage(error, fallback) {
+  if (error.response?.data?.message) return error.response.data.message;
+  if (error.code === "ECONNABORTED") {
+    return "Server is waking up. Please wait 30 seconds and try again.";
+  }
+  if (!error.response) {
+    const base = import.meta.env.VITE_API_BASE_URL || "/api";
+    return `Cannot reach API at ${base}. Check deployment settings.`;
+  }
+  return fallback;
+}
+
 export async function createSession({ name, email, role, adminKey }) {
   const { data } = await api.post("/users/session", { name, email, role, adminKey });
+  if (!data?.token || !isValidUser(data?.user)) {
+    throw new Error("Invalid session response from server.");
+  }
   setAuthToken(data.token);
   return data.user;
+}
+
+export async function fetchCurrentUser() {
+  const { data } = await api.get("/users/me");
+  if (!isValidUser(data)) {
+    throw new Error("Invalid user profile.");
+  }
+  return data;
 }
 
 export async function upgradeToSubscriber(userId) {

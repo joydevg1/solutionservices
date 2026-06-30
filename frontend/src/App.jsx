@@ -6,6 +6,7 @@ import {
   submitBooking,
   sendChatMessage,
   upgradeToSubscriber,
+  getApiErrorMessage,
 } from "./api";
 import { useUser } from "./context/UserContext";
 import LoginScreen from "./components/LoginScreen";
@@ -57,7 +58,7 @@ function CustomerApp() {
       setOffers(off);
     } catch (error) {
       console.error(error);
-      showToast("Could not load services. Is the server running?", "error");
+      showToast(getApiErrorMessage(error, "Could not load services."), "error");
     } finally {
       setServicesLoading(false);
     }
@@ -139,7 +140,7 @@ function CustomerApp() {
       setMobileTab("bookings");
     } catch (error) {
       console.error(error);
-      const msg = error.response?.data?.message || "Could not submit booking";
+      const msg = getApiErrorMessage(error, "Could not submit booking");
       showToast(msg, "error");
     } finally {
       setIsSubmitting(false);
@@ -313,7 +314,17 @@ function CustomerApp() {
 }
 
 function App() {
-  const { user, setUser } = useUser();
+  const { user, authReady, setUser } = useUser();
+
+  if (!authReady) {
+    return (
+      <div className="login-screen">
+        <div className="login-card">
+          <p>Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) return <LoginScreen onLogin={setUser} />;
   if (user.role === "admin") return <AdminDashboard />;
