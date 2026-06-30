@@ -26,9 +26,21 @@ app.url_map.strict_slashes = False
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 origin_list = [o.strip() for o in allowed_origins.split(",") if o.strip()]
 
+# Allow Cloudflare Pages preview URLs and custom domain variants.
+CORS_ORIGIN_PATTERNS = [
+    r"https://.*\.pages\.dev$",
+    r"https://(www\.)?solutionservices\.co\.in$",
+]
+
+is_production = os.getenv("FLASK_ENV") == "production"
+
 CORS(
     app,
-    resources={r"/api/*": {"origins": origin_list if os.getenv("FLASK_ENV") == "production" else "*"}},
+    resources={
+        r"/api/*": {
+            "origins": (origin_list + CORS_ORIGIN_PATTERNS) if is_production else "*"
+        }
+    },
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
     supports_credentials=False,

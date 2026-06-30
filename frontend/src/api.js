@@ -42,7 +42,13 @@ export function getApiErrorMessage(error, fallback) {
     return "Server is waking up. Please wait 30 seconds and try again.";
   }
   if (!error.response) {
+    if (error.code === "ERR_NETWORK") {
+      return "Network error reaching the API. If this is your first visit, wait 30-60 seconds and try again.";
+    }
     const base = import.meta.env.VITE_API_BASE_URL || "/api";
+    if (base.startsWith("/")) {
+      return "Cannot reach the API proxy. Redeploy Cloudflare Pages with the latest code.";
+    }
     return `Cannot reach API at ${base}. Check deployment settings.`;
   }
   return fallback;
