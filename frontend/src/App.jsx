@@ -123,7 +123,7 @@ function CustomerApp() {
     setIsSubmitting(true);
     try {
       await submitBooking({
-        userId: user.id,
+        userId: Number(user.id),
         userName: user.name,
         userEmail: user.email,
         userRole: user.role,
@@ -139,7 +139,8 @@ function CustomerApp() {
       setMobileTab("bookings");
     } catch (error) {
       console.error(error);
-      showToast("Could not submit booking", "error");
+      const msg = error.response?.data?.message || "Could not submit booking";
+      showToast(msg, "error");
     } finally {
       setIsSubmitting(false);
     }

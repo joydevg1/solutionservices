@@ -125,6 +125,9 @@ def list_users():
 
 
 def create_booking(payload):
+    from db_init import setup_database
+
+    setup_database()
     now = _now()
     booking_id = execute_insert_update(
         """
@@ -134,7 +137,7 @@ def create_booking(payload):
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            payload["userId"],
+            int(payload["userId"]),
             payload["userName"],
             payload["userEmail"],
             payload.get("userRole", "customer"),
@@ -148,8 +151,12 @@ def create_booking(payload):
             now,
         ),
     )
-    row = execute_query("SELECT * FROM bookings WHERE id = ?", (booking_id,))[0]
-    return _booking_row(row)
+    if not booking_id:
+        raise RuntimeError("Failed to create booking. Database may not be initialized.")
+    rows = execute_query("SELECT * FROM bookings WHERE id = ?", (booking_id,)) or []
+    if not rows:
+        raise RuntimeError("Failed to load booking after create.")
+    return _booking_row(rows[0])
 
 
 def list_bookings(user_id=None, status=None):

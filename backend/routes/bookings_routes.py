@@ -20,7 +20,10 @@ def bookings_root():
         return jsonify(data_store.list_bookings(user_id=g.current_user["id"])), 200
 
     data = request.get_json() or {}
-    user_id = data.get("userId")
+    try:
+        user_id = int(data.get("userId"))
+    except (TypeError, ValueError):
+        return jsonify({"message": "Invalid user id."}), 400
 
     if user_id != g.current_user["id"]:
         return jsonify({"message": "Cannot create bookings for another user."}), 403
@@ -32,22 +35,26 @@ def bookings_root():
     if not location or not address or not validate_booking_items(items):
         return jsonify({"message": "Invalid booking data."}), 400
 
-    booking = data_store.create_booking(
-        {
-            "userId": g.current_user["id"],
-            "userName": sanitize_text(g.current_user.get("name") or data.get("userName"), 120),
-            "userEmail": g.current_user["email"],
-            "userRole": g.current_user["role"],
-            "phone": sanitize_text(data.get("phone"), 20),
-            "location": location,
-            "address": address,
-            "items": items,
-            "totalAmount": min(
-                float(data.get("totalAmount") or sum(i.get("price", 0) for i in items)),
-                10_000_000,
-            ),
-        }
-    )
+    try:
+        booking = data_store.create_booking(
+            {
+                "userId": g.current_user["id"],
+                "userName": sanitize_text(g.current_user.get("name") or data.get("userName"), 120),
+                "userEmail": g.current_user["email"],
+                "userRole": g.current_user["role"],
+                "phone": sanitize_text(data.get("phone"), 20),
+                "location": location,
+                "address": address,
+                "items": items,
+                "totalAmount": min(
+                    float(data.get("totalAmount") or sum(i.get("price", 0) for i in items)),
+                    10_000_000,
+                ),
+            }
+        )
+    except RuntimeError as exc:
+        return jsonify({"message": str(exc)}), 503
+
     return jsonify(
         {"message": "Booking submitted. Waiting for admin approval.", "booking": booking}
     ), 201
