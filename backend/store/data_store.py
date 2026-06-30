@@ -71,6 +71,9 @@ def _custom_service_row(row):
 
 
 def upsert_user(name, email, role):
+    from db_init import setup_database
+
+    setup_database()
     normalized = email.strip().lower()
     now = _now()
     existing = execute_query("SELECT * FROM users WHERE email = ?", (normalized,)) or []

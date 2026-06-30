@@ -149,12 +149,20 @@ def _create_tables(cursor):
 
 
 def _migrate_schema(cursor):
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+    )
+    if not cursor.fetchone():
+        return
+
     cursor.execute("PRAGMA table_info(users)")
     user_cols = {row[1] for row in cursor.fetchall()}
     if "role" not in user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'customer'")
     if "updated_at" not in user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN updated_at TEXT")
+    if "created_at" not in user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN created_at TEXT")
 
 
 def _seed_services_and_settings(cursor):

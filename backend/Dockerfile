@@ -11,10 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV PORT=8080
-ENV DATABASE_PATH=/data/urban_services.db
 ENV FLASK_ENV=production
 ENV DEBUG=False
 
 EXPOSE 8080
 
-CMD gunicorn -w 2 -b 0.0.0.0:${PORT} app:app
+CMD ["python", "render_start.py"]

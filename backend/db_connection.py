@@ -74,7 +74,7 @@ def execute_insert_update(query, params=None):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error executing query: {e}")
+        print(f"Error executing query [{query[:80]}...]: {e}")
         connection.rollback()
         return None
     finally:
