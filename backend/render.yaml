@@ -8,7 +8,7 @@ services:
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: bash start.sh
+    startCommand: python render_start.py
     healthCheckPath: /api/health
     envVars:
       - key: FLASK_ENV
