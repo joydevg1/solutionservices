@@ -74,6 +74,8 @@ def load_current_user(required=False):
 def require_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return "", 204
         token = get_bearer_token()
         if not token:
             return jsonify({"message": "Authentication required."}), 401

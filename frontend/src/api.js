@@ -8,6 +8,25 @@ const api = axios.create({
   timeout: 120000,
 });
 
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry(requestFn, retries = 2) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      lastError = error;
+      const isNetwork = !error.response;
+      if (!isNetwork || attempt === retries) break;
+      await sleep(4000 * (attempt + 1));
+    }
+  }
+  throw lastError;
+}
+
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
   if (token) {
@@ -43,11 +62,11 @@ export function getApiErrorMessage(error, fallback) {
   }
   if (!error.response) {
     if (error.code === "ERR_NETWORK") {
-      return "Network error reaching the API. If this is your first visit, wait 30-60 seconds and try again.";
+      return "Server is waking up. Wait 30 seconds and try again.";
     }
     const base = import.meta.env.VITE_API_BASE_URL || "/api";
     if (base.startsWith("/")) {
-      return "Cannot reach the API proxy. Redeploy Cloudflare Pages with the latest code.";
+      return "Cannot reach /api proxy. Redeploy Cloudflare Pages (latest commit) and test /api/health.";
     }
     return `Cannot reach API at ${base}. Check deployment settings.`;
   }
@@ -55,7 +74,9 @@ export function getApiErrorMessage(error, fallback) {
 }
 
 export async function createSession({ name, email, role, adminKey }) {
-  const { data } = await api.post("/users/session", { name, email, role, adminKey });
+  const { data } = await withRetry(() =>
+    api.post("/users/session", { name, email, role, adminKey })
+  );
   if (!data?.token || !isValidUser(data?.user)) {
     throw new Error("Invalid session response from server.");
   }
@@ -64,7 +85,7 @@ export async function createSession({ name, email, role, adminKey }) {
 }
 
 export async function fetchCurrentUser() {
-  const { data } = await api.get("/users/me");
+  const { data } = await withRetry(() => api.get("/users/me"));
   if (!isValidUser(data)) {
     throw new Error("Invalid user profile.");
   }
