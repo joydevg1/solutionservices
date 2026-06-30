@@ -1,1 +1,2 @@
-/*    /index.html   200
+# SPA fallback only (no external API proxy — Cloudflare does not support that in _redirects)
+/*  /index.html  200
